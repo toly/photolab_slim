@@ -32,6 +32,46 @@ from scipy.ndimage.interpolation import map_coordinates
 from scipy.ndimage.filters import gaussian_filter
 import matplotlib.pyplot as plt
 
+from PIL import Image
+
+def resize(arr_image, width, height):
+    '''
+    Resize PIL image keeping ratio and using white background.
+    '''
+    # ratio_w = width / arr_image.width
+    # ratio_h = height / arr_image.height
+    arr_image_width = arr_image.shape[1]#.width
+    arr_image_height = arr_image.shape[0]#.height
+
+    ratio_w = width / arr_image_width
+    ratio_h = height / arr_image_height
+    if ratio_w < ratio_h:
+        # It must be fixed by width
+        resize_width = width
+        resize_height = round(ratio_w * arr_image_height)
+    else:
+        # Fixed by height
+        resize_width = round(ratio_h * arr_image_width)
+        resize_height = height
+
+    # image_resize = arr_image.resize((resize_width, resize_height), Image.ANTIALIAS)
+    image_resize = Image.fromarray(arr_image).resize((resize_width, resize_height), Image.ANTIALIAS)
+    background = Image.new('RGBA', (width, height), (255, 255, 255, 255))
+    offset = (round((width - resize_width) / 2), round((height - resize_height) / 2))
+    background.paste(image_resize, offset)
+
+    # return background.convert('RGB')
+    return np.array(background.convert('RGBA'))
+
+
+def arr_image_add_alpha(arr_image:np.ndarray)->np.ndarray:
+    '''add an alpha channel to image'''
+    h, w, ch = arr_image.shape
+    b,g,r = cv2.split(arr_image);
+    a = np.ones((h, w, 1), np.uint8) * 255
+
+    return cv2.merge((b, g, r, a))
+
 
 def face_get(path_file_in:str,
              path_file_result:str,
@@ -48,18 +88,32 @@ def face_get(path_file_in:str,
     # load image
     assert os.path.isfile(path_file_in), 'File "{0}" not exist'.format(path_file_in)
     img_in = cv2.imread(path_file_in)
+
     h, w, ch = img_in.shape
     gray = cv2.cvtColor(img_in, cv2.COLOR_BGR2GRAY)
 
     # add an alpha channel to image
-    b,g,r = cv2.split(img_in);
-    a = np.ones((h,w,1), np.uint8) * 255
-    img = cv2.merge((b, g, r, a))
+    # b,g,r = cv2.split(img_in);
+    # a = np.ones((h,w,1), np.uint8) * 255
+    # img = cv2.merge((b, g, r, a))
+    img = arr_image_add_alpha(img_in)
 
     # detect face
     rects = detector(gray,1)
     if len(rects) == 0:
         # return None, None
+        if img_in.shape[-1] == 3:
+            img_in = arr_image_add_alpha(img_in)
+            y, x, _ = np.where(img_in[:,:, :-1]>0)
+            y_from, y_to = (y.min(), y.max()+1)
+            x_from, x_to = (x.min(), x.max()+1)
+            img_in = img_in[y_from: y_to, x_from: x_to, :]
+            # img_in[:,:, 3] =
+            fff =111
+            # img_in[np.where(img_in[:, :, :-1].sum(axis=2) == 0), -1] = 0
+            x = np.where(img_in[:, :, :-1].sum(axis=2) == 0)
+            img_in[x[0], x[1], -1] = 0
+
         return img_in, (0, 0)
 
     roi = rects[0] # region of interest
@@ -295,7 +349,7 @@ path_frames = os.path.join(path_data, 'Faces', 'frames')
 # imageio.mimsave(os.path.join(path_frames, 'movie.gif'), seq)
 # %%
 path_file_back = os.path.join(path_data, 'Faces', 'thegovernator.png')
-path_file_in = os.path.join(path_data, 'other', 'watch_2.png')
+path_file_in = os.path.join(path_data, 'other', 'bug_5.png')
 # path_file_in = os.path.join(path_data, 'other', 'gorilla_2.png')
 
 img_in = cv2.imread(path_file_in)
@@ -309,39 +363,6 @@ back_result, back_coordinates_face = face_get(path_file_back,
                                               path_file_result=None,
                                               path_file_shape_predictor_68_face_landmarks=path_file_shape_predictor_68_face_landmarks,
                                               )
-# %%
-
-from PIL import Image
-
-def resize(arr_image, width, height):
-    '''
-    Resize PIL image keeping ratio and using white background.
-    '''
-    # ratio_w = width / arr_image.width
-    # ratio_h = height / arr_image.height
-    arr_image_width = arr_image.shape[1]#.width
-    arr_image_height = arr_image.shape[0]#.height
-
-    ratio_w = width / arr_image_width
-    ratio_h = height / arr_image_height
-    if ratio_w < ratio_h:
-        # It must be fixed by width
-        resize_width = width
-        resize_height = round(ratio_w * arr_image_height)
-    else:
-        # Fixed by height
-        resize_width = round(ratio_h * arr_image_width)
-        resize_height = height
-
-    # image_resize = arr_image.resize((resize_width, resize_height), Image.ANTIALIAS)
-    image_resize = Image.fromarray(arr_image).resize((resize_width, resize_height), Image.ANTIALIAS)
-    background = Image.new('RGBA', (width, height), (255, 255, 255, 255))
-    offset = (round((width - resize_width) / 2), round((height - resize_height) / 2))
-    background.paste(image_resize, offset)
-
-    # return background.convert('RGB')
-    return np.array(background.convert('RGB'))
-
 
 in_result_resized = resize(in_result, width=back_result.shape[1], height=back_result.shape[1])
 print(in_result.shape, back_result.shape, in_result_resized.shape)
@@ -351,8 +372,10 @@ print(in_result.shape, back_result.shape, in_result_resized.shape)
 # for filename in glob.glob(os.path.join(path_data, '*')):
 #     print(filename)
 
-# %%
 im_back_inplaced = array_past(img_back, in_result_resized, back_coordinates_face)
 img_back.shape, in_result_resized.shape
 
+path_file_im_back_inplaced = os.path.join(path_data, 'Faces', 'im_back_inplaced_{0}_{1}.png'\
+                                          .format(os.path.basename(path_file_back), os.path.basename(path_file_in)))
+cv2.imwrite(path_file_im_back_inplaced, im_back_inplaced)
 
