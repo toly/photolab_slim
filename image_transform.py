@@ -154,6 +154,21 @@ def folder_frame_prepare(path_frame:str):
     for i in os.listdir(path_frame):
         os.remove(os.path.join(path_frame, i))
 
+def array_past(arr_back:np.ndarray, arr_insert:np.ndarray, coordinate_past:tuple):
+
+    y_offset, x_offset = coordinate_past
+    y1, y2 = y_offset, y_offset + arr_insert.shape[0]
+    x1, x2 = x_offset, x_offset + arr_insert.shape[1]
+
+    alpha_s = arr_insert[:, :, 3] / 255.0
+    alpha_l = 1.0 - alpha_s
+
+    for c in range(0, 3):
+        arr_back[y1:y2, x1:x2, c] = (alpha_s * arr_insert[:, :, c] +
+                                     alpha_l * arr_back[y1:y2, x1:x2, c])
+
+
+    return arr_back
 
 def frames_create(path_file_in:str, path_frames:str,
                   path_file_back:str=None,
@@ -194,23 +209,10 @@ def frames_create(path_file_in:str, path_frames:str,
 
 
 
-    # for i, k_shape_0 in enumerate(
-    #                     np.arange(range_k_shape_0[0],
-    #                     range_k_shape_0[1]+step_k_shape_0,
-    #                     step_k_shape_0)):
     k_shape_0_from, k_shape_0_to, k_shape_0_step =\
         _range_k_shape(range_k_shape_0, step_k_shape_0, asceding)
     for i, k_shape_0 in enumerate(
             np.arange(k_shape_0_from, k_shape_0_to, k_shape_0_step)):
-
-        # if asceding and i % 2 == 0:
-            #     range_k_shape_1_from, range_k_shape_1_to, step = min(range_k_shape_1), \
-            #                                                      (max(range_k_shape_1)/ + step_k_shape_1), \
-            #                                                      step_k_shape_1
-            # else:
-            #     range_k_shape_1_from, range_k_shape_1_to, step = range_k_shape_1[1], \
-            #                                                      (range_k_shape_1[1] - step_k_shape_1), \
-            #                                                      -step_k_shape_1
 
         k_shape_1_from, k_shape_1_to, k_shape_1_step = \
             _range_k_shape(range_k_shape_1, step_k_shape_1, asceding and i % 2 == 0)
@@ -225,33 +227,8 @@ def frames_create(path_file_in:str, path_frames:str,
             path_file = 'result_non_linear_{0:04d}_{1:.4f}_{2:.4f}.png'.format(cnt, k_shape_0, k_shape_1)
 
             if not path_file_back is None:
-                # past_x = coordinate_past[1]
-                # past_y = coordinate_past[0]
-                # # range_past_y = [past_y,  past_y + im_merge_t.shape[0]]
-                # # range_past_x = [past_x, past_x + im_merge_t.shape[1]]
-                # past_x_to = past_x + im_merge_t.shape[1]
-                # past_y_to = past_y + im_merge_t.shape[0]
-                #
-                #
-                # # im_back[[past_y:past_y_to][im_merge_t[:, :, -1]],
-                # #         [past_x:past_x_to][im_merge_t[:, :, -1]],
-                # im_back[ list(range(past_y, past_y_to))[im_merge_t[:, :, -1]],
-                #     list(range(past_x, past_x_to))[im_merge_t[:, :, -1]],
-                #     :] = \
-                #             im_merge_t[im_merge_t[im_merge_t[:, :, -1]],
-                #                        im_merge_t[im_merge_t[:, :, -1]], :-1]
 
-                y_offset, x_offset = coordinate_past[0]
-                # range_past_y = [past_y,  past_y + im_merge_t.shape[0]]
-                y1, y2 = y_offset, y_offset + im_merge_t.shape[0]
-                x1, x2 = x_offset, x_offset + im_merge_t.shape[1]
-
-                alpha_s = im_merge_t[:, :, 3] / 255.0
-                alpha_l = 1.0 - alpha_s
-
-                for c in range(0, 3):
-                    im_back[y1:y2, x1:x2, c] = (alpha_s * im_merge_t[:, :, c] +
-                                              alpha_l * im_back[y1:y2, x1:x2, c])
+                im_back = array_past(im_back, im_merge_t, coordinate_past)
 
                 # im_back.paste(im_merge_t, coordinate_past, im_merge_t)
                 cv2.imwrite(os.path.join(path_frames, path_file), im_back)
@@ -262,15 +239,6 @@ def frames_create(path_file_in:str, path_frames:str,
 
             if verbose: print('Frame created :', path_file)
             cnt += 1
-
-    #     if cnt > 3:
-    #         break
-    #     # break
-    # # print('result_non_linear_{0}_{1:.2f}_{2:.2f}.png'.format(
-    # #     cnt, k_shape_0, k_shape_1))
-    # if cnt > 3:
-    #     break
-    # # break
 
     return cnt
 
