@@ -289,6 +289,3 @@ import imageio
 #     images.append(imageio.imread(filename))
 # imageio.mimsave('/path/to/movie.gif', images)
 imageio.mimsave(os.path.join(path_frame, 'movie.gif'), seq)
-
-PhotoHack 22-23.06.19 5greenbucks
-12345678A!
