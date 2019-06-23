@@ -301,27 +301,32 @@ def frames_create(path_file_in:str, path_frames:str,
     return cnt
 
 path_data = 'data'
-path_file_in = os.path.join(path_data, 'Faces', 'thegovernator.png')
+# path_file_in = os.path.join(path_data, 'Faces', 'thegovernator.png')
+# path_file_in = os.path.join(path_data, 'Faces', 'pic_d.jpg')
+# path_file_in = os.path.join(path_data, 'Faces', 'jury_2.jpg')
+# path_file_in = os.path.join(path_data, 'picture_6.jpg')
+path_file_in = os.path.join(path_data, 'Faces', 'Dmitry.jpg')
 path_file_result = os.path.join(path_data, 'Faces', 'result.png')
 path_file_shape_predictor_68_face_landmarks = os.path.join(path_data, 'Faces', 'shape_predictor_68_face_landmarks.dat')
 path_frames = os.path.join(path_data, 'Faces', 'frames')
 
-# _, coordinates_face = face_get(path_file_in, path_file_result, path_file_shape_predictor_68_face_landmarks)
-# folder_frame_prepare(path_frames)
-# seq = []
-# # frames_create(path_file_in,
-# cnt = frames_create(path_file_result,
-#                     path_frames,
-#                     path_file_in, coordinates_face,
-#                     step_k_shape_0 = 0.002,
-#                     step_k_shape_1 = 0.002,
-#                     range_k_shape_0 = (0.0, 0.05),
-#                     range_k_shape_1 = (0.01, 0.05),
-#                     seq = seq, cnt = 0,
-#                     asceding=True,
-#                     verbose = 1)
-#
-# # %%
+_, coordinates_face = face_get(path_file_in, path_file_result, path_file_shape_predictor_68_face_landmarks)
+folder_frame_prepare(path_frames)
+seq = []
+# frames_create(path_file_in,
+cnt = frames_create(path_file_result,
+                    path_frames,
+                    path_file_in, coordinates_face,
+                    step_k_shape_0 = 0.0025,
+                    step_k_shape_1 = 0.0025,
+                    range_k_shape_0 = (0.035, 0.05),
+                    range_k_shape_1 = (0.04, 0.05),
+                    seq = seq, cnt = 0,
+                    asceding=True,
+                    verbose = 1)
+
+# os._exit(0)
+# %%
 # # import cv2
 # # import os
 # #
