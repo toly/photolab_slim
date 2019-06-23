@@ -198,6 +198,7 @@ def frames_create(path_file_in:str, path_frames:str,
     return cnt
 
 
+
 path_data = 'data'
 path_file_in = os.path.join(path_data, 'Faces', 'thegovernator.png')
 path_file_result = os.path.join(path_data, 'Faces', 'result.png')
