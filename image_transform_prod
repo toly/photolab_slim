@@ -198,12 +198,58 @@ def frames_create(path_file_in:str, path_frames:str,
     return cnt
 
 
+def face_morfing(path_file_in,
+                 path_gif,
+                 path_file_shape_predictor_68_face_landmarks,
+                 step_k_shape_0 = 0.002,
+                 step_k_shape_1 = 0.002,
+                 range_k_shape_0 = (0.0, 0.05),
+                 range_k_shape_1 = (0.01, 0.05),
+                 verbose = 1):
 
-path_data = 'data'
-path_file_in = os.path.join(path_data, 'Faces', 'thegovernator.png')
-path_file_result = os.path.join(path_data, 'Faces', 'result.png')
-path_file_shape_predictor_68_face_landmarks = os.path.join(path_data, 'Faces', 'shape_predictor_68_face_landmarks.dat')
-path_frames = os.path.join(path_data, 'Faces', 'frames')
+    path_file_result = os.path.join(os.path.dirname(path_file_in),\
+                                    '.'.join([os.path.split( os.path.basename(path_file_in))[0],
+                                              os.path.split( os.path.basename(path_file_in))[1][1:] ] ))
+
+    _, coordinates_face = face_get(path_file_in, path_file_result, path_file_shape_predictor_68_face_landmarks)
+
+    folder_frame_prepare(path_frames)
+
+    seq = []
+    cnt = frames_create(path_file_result,
+                        path_frames,
+                        path_file_in, coordinates_face,
+                        step_k_shape_0 = step_k_shape_0,
+                        step_k_shape_1 = step_k_shape_1,
+                        range_k_shape_0 = range_k_shape_0,
+                        range_k_shape_1 = range_k_shape_1,
+                        seq = seq, cnt = 0,
+                        asceding=True,
+                        verbose = verbose)
+
+
+    import imageio
+    if os.path.isfile(path_gif):
+        os.remove(path_gif)
+    imageio.mimsave(path_gif, seq)
+
 
 
 if __name__ == '__main__':
+
+    path_data = 'data'
+    path_file_in = os.path.join(path_data, 'Faces', 'thegovernator.png')
+    # path_file_result = os.path.join(path_data, 'Faces', 'result.png')
+    path_file_shape_predictor_68_face_landmarks = os.path.join(path_data, 'Faces',
+                                                               'shape_predictor_68_face_landmarks.dat')
+    path_frames = os.path.join(path_data, 'Faces', 'frames')
+    path_gif = os.path.join(path_frames, 'movie.gif')
+
+    face_morfing(path_file_in,
+                 path_gif,
+                 path_file_shape_predictor_68_face_landmarks,
+                 step_k_shape_0=0.002,
+                 step_k_shape_1=0.002,
+                 range_k_shape_0=(0.0, 0.05),
+                 range_k_shape_1=(0.01, 0.05),
+                 verbose=1)
