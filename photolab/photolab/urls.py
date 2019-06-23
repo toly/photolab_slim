@@ -30,7 +30,9 @@ graph = tf.get_default_graph()
 
 def view(request):
 
-    context = {}
+    context = {
+        'error': ''
+    }
 
     if request.method == 'POST':
         photo = request.FILES['photo']
@@ -48,14 +50,19 @@ def view(request):
 
         image = load_image(filename)
 
-        global graph
-        with graph.as_default():
-            image_result = do_thin(image, ratio=0.85)
-            image_result.save(filename_result)
+        try:
+            global graph
+            with graph.as_default():
+                image_result = do_thin(image, ratio=0.85)
+                image_result.save(filename_result)
+        except Exception as e:
+            context.update({
+                'error': str(e)
+            })
 
         context.update({
             'input': url,
-            'output': url_result
+            'output': url_result,
         })
 
     return render(request, 'index.html', context=context)

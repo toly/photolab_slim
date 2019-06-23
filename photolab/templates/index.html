@@ -9,10 +9,16 @@
 <h1>Хочешь похудеть? Спроси меня как</h1>
 
 <form method="POST" action="" enctype="multipart/form-data">
-    <input type="file" name="photo">
+    <input type="file" name="photo" accept="image/jpeg">
     <input type="submit" value="Похудеть">
     {% csrf_token %}
 </form>
+
+{% if error %}
+    <br />
+ERROR: {{ error }}
+    <br />
+{% endif %}
 
 <table>
     <tr>
