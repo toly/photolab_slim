@@ -31,8 +31,8 @@ CLASS_NAMES = [
     'teddy bear', 'hair drier', 'toothbrush'
 ]
 
-# from mrcnn import utils
-# import coco
+from mrcnn import utils
+import coco
 
 
 # class InferenceConfig(coco.CocoConfig):
