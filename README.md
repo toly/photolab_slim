@@ -13,3 +13,8 @@
 
     python photolab/manage.py migrate
     python photolab/manage.py runserver 0.0.0.0:8000
+
+
+![demo1](data/demo1.png)
+
+![demo2](data/demo2.png)
