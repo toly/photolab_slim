@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<h1>photo effects</h1>
+
+<form method="POST" action="" enctype="multipart/form-data">
+    <input type="file" name="photo">
+    <input type="submit" value="Похудеть">
+    {% csrf_token %}
+</form>
+
+<table>
+    <tr>
+        <td width="300px">
+            <img src="{{ input }}" width="300px"/>
+        </td>
+        <td width="300px">
+            <img src="{{ output }}" width="300px"/>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
