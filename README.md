@@ -2,7 +2,7 @@
 
 ## install requirements
 
-    pip install cython numpy scipy sklearn tensorflow keras jupyter pandas scikit-image imgaug pycocotools matplotlib
+    pip install cython numpy scipy sklearn tensorflow keras jupyter pandas scikit-image imgaug pycocotools matplotlib django
 
     mkdir lib
     git clone https://github.com/matterport/Mask_RCNN.git
