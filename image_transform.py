@@ -241,8 +241,7 @@ def frames_create(path_file_in:str, path_frames:str,
                 #             im_merge_t[im_merge_t[im_merge_t[:, :, -1]],
                 #                        im_merge_t[im_merge_t[:, :, -1]], :-1]
 
-                x_offset = coordinate_past[1]
-                y_offset = coordinate_past[0]
+                y_offset, x_offset = coordinate_past[0]
                 # range_past_y = [past_y,  past_y + im_merge_t.shape[0]]
                 y1, y2 = y_offset, y_offset + im_merge_t.shape[0]
                 x1, x2 = x_offset, x_offset + im_merge_t.shape[1]
@@ -256,7 +255,7 @@ def frames_create(path_file_in:str, path_frames:str,
 
                 # im_back.paste(im_merge_t, coordinate_past, im_merge_t)
                 cv2.imwrite(os.path.join(path_frames, path_file), im_back)
-                seq.append(im_merge_t)
+                seq.append(im_back)
             else:
                 cv2.imwrite(os.path.join(path_frames, path_file), im_merge_t)
                 seq.append(im_merge_t)
