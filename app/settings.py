@@ -4,6 +4,7 @@ from os.path import dirname
 
 PROJECT_DIR = os.path.join(dirname(dirname(os.path.abspath(__file__))))
 LIB_DIR = os.path.join(PROJECT_DIR, 'lib')
+FILES_DIR = os.path.join(PROJECT_DIR, 'files')
 MRCNN_PATH = os.path.join(LIB_DIR, 'Mask_RCNN')
 COCO_PATH = os.path.join(MRCNN_PATH, 'samples/coco')
 COCO_MODEL_PATH = os.path.join(LIB_DIR, "mask_rcnn_coco.h5")
