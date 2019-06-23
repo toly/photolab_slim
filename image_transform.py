@@ -35,7 +35,9 @@ import matplotlib.pyplot as plt
 
 def face_get(path_file_in:str,
              path_file_result:str,
-             path_file_shape_predictor_68_face_landmarks:str='shape_predictor_68_face_landmarks.data'):
+             path_file_shape_predictor_68_face_landmarks:str='shape_predictor_68_face_landmarks.data',
+             # coordinates_face:tuple=None
+             ):
 
     detector = dlib.get_frontal_face_detector()
     # predictor = dlib.shape_predictor(os.path.join(path_data, 'Faces', 'shape_predictor_68_face_landmarks.dat'))
@@ -77,13 +79,14 @@ def face_get(path_file_in:str,
     cv2.drawContours(mask, contours, -1, 0, -1) # remove below jawline
 
     top = rects[0].top()
+    coordinates_face = (top, roi.left())
     # apply to image
     result = cv2.bitwise_and(img, img, mask = mask)
     result = result[top:bottom, roi.left():roi.left()+roi.width()] # crop ROI
     if not path_file_result is None:
         cv2.imwrite(path_file_result, result)
-    else:
-        return result
+
+    return result, coordinates_face
 
 
 # Function to distort image
@@ -113,7 +116,7 @@ def elastic_transform(image, alpha, sigma, alpha_affine, random_state=None):
 
     dx = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
     dy = gaussian_filter((random_state.rand(*shape) * 2 - 1), sigma) * alpha
-    dz = np.zeros_like(dx)
+    # dz = np.zeros_like(dx)
 
     x, y, z = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]), np.arange(shape[2]))
     indices = np.reshape(y + dy, (-1, 1)), np.reshape(x + dx, (-1, 1)), np.reshape(z, (-1, 1))
@@ -153,6 +156,8 @@ def folder_frame_prepare(path_frame:str):
 
 
 def frames_create(path_file_in:str, path_frames:str,
+                  path_file_back:str=None,
+                  coordinate_past:tuple=None,
                   step_k_shape_0:float = 0.002,
                   step_k_shape_1:float = 0.002,
                   range_k_shape_0:tuple = (0.0, 0.05),
@@ -170,6 +175,12 @@ def frames_create(path_file_in:str, path_frames:str,
     assert os.path.isfile(path_file_in), 'File "{0}" not exist'.format(path_file_in)
 
     im_merge = cv2.imread(path_file_in, -1)
+
+    if not path_file_back is None:
+        assert os.path.isfile(path_file_back), 'File "{0}" not exist'.format(path_file_back)
+        im_back = cv2.imread(path_file_back, -1)
+        assert not coordinate_past is None and len(coordinate_past)==2, 'coordinate_past "{0}" is bad'.format(coordinate_past)
+
 
     def _range_k_shape(range_k_shape, step_k_shape, asceding)->tuple:
         if asceding:
@@ -211,9 +222,45 @@ def frames_create(path_file_in:str, path_frames:str,
             im_merge_t = elastic_transform(im_merge, im_merge.shape[1] * 2,
                                            im_merge.shape[1] * k_shape_1,
                                            im_merge.shape[1] * k_shape_0)
-            path_file = 'result_non_linear_{0:05d}_{1:.4f}_{2:.4f}.png'.format(cnt, k_shape_0, k_shape_1)
-            cv2.imwrite(os.path.join(path_frames, path_file), im_merge_t)
-            seq.append(im_merge_t)
+            path_file = 'result_non_linear_{0:04d}_{1:.4f}_{2:.4f}.png'.format(cnt, k_shape_0, k_shape_1)
+
+            if not path_file_back is None:
+                # past_x = coordinate_past[1]
+                # past_y = coordinate_past[0]
+                # # range_past_y = [past_y,  past_y + im_merge_t.shape[0]]
+                # # range_past_x = [past_x, past_x + im_merge_t.shape[1]]
+                # past_x_to = past_x + im_merge_t.shape[1]
+                # past_y_to = past_y + im_merge_t.shape[0]
+                #
+                #
+                # # im_back[[past_y:past_y_to][im_merge_t[:, :, -1]],
+                # #         [past_x:past_x_to][im_merge_t[:, :, -1]],
+                # im_back[ list(range(past_y, past_y_to))[im_merge_t[:, :, -1]],
+                #     list(range(past_x, past_x_to))[im_merge_t[:, :, -1]],
+                #     :] = \
+                #             im_merge_t[im_merge_t[im_merge_t[:, :, -1]],
+                #                        im_merge_t[im_merge_t[:, :, -1]], :-1]
+
+                x_offset = coordinate_past[1]
+                y_offset = coordinate_past[0]
+                # range_past_y = [past_y,  past_y + im_merge_t.shape[0]]
+                y1, y2 = y_offset, y_offset + im_merge_t.shape[0]
+                x1, x2 = x_offset, x_offset + im_merge_t.shape[1]
+
+                alpha_s = im_merge_t[:, :, 3] / 255.0
+                alpha_l = 1.0 - alpha_s
+
+                for c in range(0, 3):
+                    im_back[y1:y2, x1:x2, c] = (alpha_s * im_merge_t[:, :, c] +
+                                              alpha_l * im_back[y1:y2, x1:x2, c])
+
+                # im_back.paste(im_merge_t, coordinate_past, im_merge_t)
+                cv2.imwrite(os.path.join(path_frames, path_file), im_back)
+                seq.append(im_merge_t)
+            else:
+                cv2.imwrite(os.path.join(path_frames, path_file), im_merge_t)
+                seq.append(im_merge_t)
+
             if verbose: print('Frame created :', path_file)
             cnt += 1
 
@@ -234,12 +281,13 @@ path_file_result = os.path.join(path_data, 'Faces', 'result.png')
 path_file_shape_predictor_68_face_landmarks = os.path.join(path_data, 'Faces', 'shape_predictor_68_face_landmarks.dat')
 path_frames = os.path.join(path_data, 'Faces', 'frames')
 
-face_get(path_file_in, path_file_result, path_file_shape_predictor_68_face_landmarks)
+_, coordinates_face = face_get(path_file_in, path_file_result, path_file_shape_predictor_68_face_landmarks)
 folder_frame_prepare(path_frames)
 seq = []
 # frames_create(path_file_in,
 cnt = frames_create(path_file_result,
                     path_frames,
+                    path_file_in, coordinates_face,
                     step_k_shape_0 = 0.002,
                     step_k_shape_1 = 0.002,
                     range_k_shape_0 = (0.0, 0.05),
@@ -267,6 +315,8 @@ cnt = frames_create(path_file_result,
 
 # %%
 import imageio
+if os.path.isfile(os.path.join(path_frames, 'movie.gif')):
+    os.remove(os.path.join(path_frames, 'movie.gif'))
 # images = []
 # for filename in filenames:
 #     images.append(imageio.imread(filename))
